@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Temps d’attente pour nous retrouver</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#ffffff; --ink:#4a3f3b; --soft:#a89a92; --accent:#e5a095; --line:#f3ebe5;
+  --serif:'Cormorant Garamond',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+}
+html{height:100%}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);font-weight:300;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  background-image:linear-gradient(180deg,#ffffff 0%,#f0f7fd 45%,#d9ebf8 100%);background-repeat:no-repeat;background-attachment:fixed}
+main{width:100%;max-width:640px;padding:48px 24px;box-sizing:border-box;animation:in 1.2s ease both}
+@keyframes in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--soft);margin:0 0 20px}
+h1{font-family:var(--serif);font-weight:300;font-size:clamp(30px,6.5vw,46px);line-height:1.2;margin:0 auto 44px;max-width:16ch}
+h1 em{color:var(--accent);font-style:italic}
+.clock{display:flex;justify-content:center;gap:clamp(14px,5vw,40px);margin-bottom:56px}
+.unit{min-width:56px}
+.num{font-family:var(--serif);font-size:clamp(44px,12vw,76px);font-weight:300;line-height:1;font-variant-numeric:tabular-nums}
+.lab{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--soft);margin-top:10px}
+.rule{width:40px;height:1px;background:var(--accent);margin:0 auto 36px;opacity:.7}
+.day{font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+.phrase{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(22px,4.6vw,30px);line-height:1.4;margin:0 auto;max-width:30ch}
+.foot{margin-top:56px;font-size:12px;color:var(--soft);letter-spacing:.06em}
+#dday{display:none}
+.is-dday #wait{display:none}
+.is-dday #dday{display:block}
+.msg{font-family:var(--serif);font-weight:300;font-size:clamp(20px,4vw,26px);line-height:1.6;max-width:34ch;margin:0 auto;white-space:pre-line}
+.heart{position:fixed;bottom:-30px;color:var(--accent);opacity:0;animation:float linear infinite;pointer-events:none}
+@keyframes float{0%{transform:translateY(0);opacity:0}15%{opacity:.5}100%{transform:translateY(-110vh);opacity:0}}
+@media (prefers-reduced-motion:reduce){main{animation:none}.heart{display:none}}
+</style>
+</head>
+<body>
+<main>
+  <!-- Avant le jour J -->
+  <section id="wait">
+    <h1>Temps d’attente pour <em>nous retrouver</em></h1>
+    <div class="clock" aria-live="off">
+      <div class="unit"><div class="num" id="d">--</div><div class="lab">jours</div></div>
+      <div class="unit"><div class="num" id="h">--</div><div class="lab">heures</div></div>
+      <div class="unit"><div class="num" id="m">--</div><div class="lab">minutes</div></div>
+      <div class="unit"><div class="num" id="s">--</div><div class="lab">secondes</div></div>
+    </div>
+    <div class="rule"></div>
+    <p class="day" id="dayLabel"></p>
+    <p class="phrase" id="phrase"></p>
+    <p class="foot">Un nouveau compliment chaque jour ♡</p>
+  </section>
+
+  <!-- Le jour J -->
+  <section id="dday">
+    <p class="eyebrow">30 décembre · 9h08</p>
+    <h1>C’est <em>aujourd’hui</em></h1>
+    <div class="rule"></div>
+    <p class="msg" id="finalMsg"></p>
+  </section>
+</main>
+
+<script>
+/* ======== À PERSONNALISER ======== */
+// Date et heure du jour J (année, mois [0 = janvier], jour, heure, minute)
+const TARGET = new Date(2026, 11, 30, 9, 8, 0);
+// Premier jour du décompte (la phrase n°1 s’affiche ce jour-là)
+const START = new Date(2026, 10, 26);
+
+// Le message spécial du jour J (remplace-le par le tien !)
+const FINAL_MESSAGE =
+`Voilà, on y est.
+Merci d’être exactement qui tu es.
+J’ai hâte de tout ce qu’on va vivre ensemble.
+
+Je t’aime ♡`;
+
+// Un compliment par jour, à partir du 26 novembre
+const PHRASES = [
+ "Ton sourire a le pouvoir de réparer n’importe quelle mauvaise journée.",
+ "Tu as un cœur immense, et j’ai la chance d’y habiter.",
+ "Tu es la personne la plus drôle que je connaisse, même quand tu ne le fais pas exprès.",
+ "Ta façon de voir les choses rend le monde plus joli.",
+ "Tu es beau, et pas seulement de l’extérieur.",
+ "Tu sais toujours trouver les mots qui font du bien.",
+ "Ton rire est mon son préféré au monde.",
+ "Tu me donnes envie d’être la meilleure version de moi-même.",
+ "Tu es incroyablement doué pour rendre les petits moments magiques.",
+ "Ta gentillesse est une force, et elle me touche chaque jour.",
+ "Tu as un regard qui me fait me sentir chez moi.",
+ "Tu es courageux, bien plus que tu ne le crois.",
+ "Tes câlins sont officiellement les meilleurs de l’univers.",
+ "Tu es intelligent, curieux, et j’adore t’écouter parler de ce qui te passionne.",
+ "Tu rends tout plus simple, plus doux, plus lumineux.",
+ "Tu es la preuve que les belles personnes existent vraiment.",
+ "Ta présence suffit à me rassurer.",
+ "Tu es attentionné, même dans les plus petits détails.",
+ "Tu as une énergie qui donne envie de tout essayer avec toi.",
+ "Tu es mon endroit préféré, où que l’on soit.",
+ "Ta voix a le don de m’apaiser en trois secondes.",
+ "Tu es patient avec moi, et ça n’a pas de prix.",
+ "Tu as un charme fou, et tu ne t’en rends même pas compte.",
+ "Tu es fort, doux et sincère : un mélange rare.",
+ "Ta façon de me regarder me fait me sentir la plus chanceuse.",
+ "Tu mets de la joie partout où tu passes.",
+ "Tu es la personne avec qui je veux partager tous mes fous rires.",
+ "Tu es talentueux, et je suis très fière de toi.",
+ "Tu es une belle âme, tout simplement.",
+ "Tu me fais tomber amoureuse de toi encore et encore.",
+ "Tu es la plus belle chose qui me soit arrivée cette année.",
+ "Tu es tout ce que j’espérais, et bien plus encore.",
+ "Tu es mon plus beau cadeau, et dans quelques jours je te retrouve.",
+ "Tu es merveilleux, et demain n’est plus très loin ♡"
+];
+/* ================================== */
+
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, '0');
+const midnight = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+function showPhrase(now){
+  const diff = Math.round((midnight(now) - midnight(START)) / 86400000);
+  const i = Math.max(0, Math.min(PHRASES.length - 1, diff));
+  const left = Math.round((midnight(TARGET) - midnight(now)) / 86400000);
+  $('dayLabel').textContent = left > 1 ? 'J-' + left : 'Demain';
+  $('phrase').textContent = '“' + PHRASES[i] + '”';
+}
+
+let hearts = false;
+function dday(){
+  document.body.classList.add('is-dday');
+  $('finalMsg').textContent = FINAL_MESSAGE;
+  if (hearts) return; hearts = true;
+  for (let i = 0; i < 14; i++){
+    const h = document.createElement('span');
+    h.className = 'heart'; h.textContent = '♡';
+    h.style.left = Math.random() * 100 + 'vw';
+    h.style.fontSize = (14 + Math.random() * 22) + 'px';
+    h.style.animationDuration = (7 + Math.random() * 8) + 's';
+    h.style.animationDelay = (Math.random() * 8) + 's';
+    document.body.appendChild(h);
+  }
+}
+
+function tick(){
+  const now = new Date();
+  if (location.hash === '#jourj' || now >= TARGET) { dday(); return; }
+  document.body.classList.remove('is-dday');
+  const t = TARGET - now;
+  $('d').textContent = Math.floor(t / 86400000);
+  $('h').textContent = pad(Math.floor(t / 3600000) % 24);
+  $('m').textContent = pad(Math.floor(t / 60000) % 60);
+  $('s').textContent = pad(Math.floor(t / 1000) % 60);
+  showPhrase(now);
+}
+window.addEventListener('hashchange', tick);
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
